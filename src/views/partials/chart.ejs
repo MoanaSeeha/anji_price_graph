@@ -42,8 +42,6 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
   let loading_flag = false;
-  const pairAddress = "0xa527a61703d82139f8a06bc30097cc9caa2df5a6";
-  const chain = 'bsc';
   $(document).ready(function () {
     $("#btn_get_d").click(() => {
       getalldata(1)
@@ -67,11 +65,9 @@
       return dateTime;
     }
 
-    async function getData(days) {
+    async function getData(date) {
       await axios.post('/get_data', {
-        days,
-        pairAddress,
-        chain
+        days: date,
       })
         .then((response) => {
           resolve_arr = response.data;
