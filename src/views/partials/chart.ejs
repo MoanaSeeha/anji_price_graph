@@ -1,0 +1,177 @@
+
+<body>
+  <div id="chart_board" class="relative py-4">
+    <div class=" flex justify-between px-5">
+      <div class="flex space-x-2">
+        <div>
+          <img src="bnb.png" alt="" class=" w-10 h-10 rounded-full border border-gray-500 inline-block">
+          <img src="anji.jpg" alt="" class=" w-10 h-10 rounded-full border border-gray-500 inline-block">
+        </div>
+        <div>
+          <p class="text-3xl font-bold">BNB/ANJI</p>
+        </div>
+      </div>
+      <div id="btn_group" class="flex space-x-2">
+        <button id="btn_get_d" class="text-2xl font-bold border-gray-300 rounded-lg hover:cursor-pointer hover:bg-slate-500">24h</button>
+        <button id="btn_get_w" class="text-2xl font-bold border-gray-300 rounded-lg hover:cursor-pointer hover:bg-slate-500">1w</button>
+        <button id="btn_get_m" class="text-2xl font-bold border-gray-300 rounded-lg hover:cursor-pointer hover:bg-slate-500">1m</button>
+        <button id="btn_get_y" class="text-2xl font-bold border-gray-300 rounded-lg hover:cursor-pointer hover:bg-slate-500">1y</button>
+      </div>
+    </div>
+    <div class="px-5 my-6">
+      <div>
+        <p id="current_price" class=" text-6xl font-bold inline-block mr-4"></p>
+        <p id="rate_changed" class=" inline-block text-red-500 text-xl"></p>
+      </div>
+      <div>
+        <p id="current_time" class=" text-gray-500 text-xl"></p>
+      </div>
+    </div>
+    <div class="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2">
+      <img 
+        id="chart_loading"
+        src="https://www.freeiconspng.com/uploads/load-icon-png-13.png" 
+        width="50" alt="Icon Load Vector" 
+        class="hidden animate-spin"/>
+    </div>
+    <div id="chart" class="relative h-96">
+    </div>
+  </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+  let loading_flag = false;
+  const pairAddress = "0xa527a61703d82139f8a06bc30097cc9caa2df5a6";
+  const chain = 'bsc';
+  $(document).ready(function () {
+    $("#btn_get_d").click(() => {
+      getalldata(1)
+    })
+    $("#btn_get_w").click(() => {
+      getalldata(7)
+    })
+    $("#btn_get_m").click(() => {
+      getalldata(30)
+    })
+    $("#btn_get_y").click(() => {
+      getalldata(365)
+    })
+    $("#btn_get_d").click();
+
+    function getformatedTime(time) {
+      time = new Date(time)
+      var date = `${time.getFullYear()}/${(time.getMonth() + 1)}/${time.getDate()}`;
+      var time = time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds();
+      var dateTime = date + ' ' + time;
+      return dateTime;
+    }
+
+    async function getData(days) {
+      await axios.post('/get_data', {
+        days,
+        pairAddress,
+        chain
+      })
+        .then((response) => {
+          resolve_arr = response.data;
+        }, (error) => {
+          console.log(error);
+        });
+    }
+    let resolve_arr = [];
+
+    function displayLoading() {
+      loading_flag = true;
+      $("#btn_group").children().addClass('opacity-25')
+      $("#btn_group").children().removeClass('hover:cursor-pointer', 'hover:bg-slate-500')
+      $("#chart_loading").removeClass("hidden");
+      $("#btn_group").children().attr({ 'disabled': true })
+    }
+
+    function stopLoading() {
+      $("#chart_loading").addClass("hidden");
+      $("#btn_group").children().removeClass('opacity-25')
+      $("#btn_group").children().addClass('hover:cursor-pointer', 'hover:bg-slate-500')
+      loading_flag = false;
+      $("#btn_group").children().attr({ 'disabled': false })
+    }
+
+    async function getalldata(days) {
+      if(!loading_flag) {
+        displayLoading();
+        let date_arr = [];
+        let price_arr = [];
+        await getData(Number(days));
+        resolve_arr = resolve_arr.prices;
+        $("#current_time").text(new Date(resolve_arr[resolve_arr.length-1][0]));
+        $("#current_price").text(resolve_arr[resolve_arr.length-1][1]);
+        $("#rate_changed").text((resolve_arr[resolve_arr.length-1][1]-resolve_arr[0][1])/resolve_arr[0][1]*100 + '%');
+        for (let i = 0; i < resolve_arr.length; i += parseInt(resolve_arr.length / 15)) {
+          date_arr.push(getformatedTime(resolve_arr[i][0]));
+          price_arr.push(resolve_arr[i][1])
+        }
+        displayChart(date_arr, price_arr)
+      }
+    }
+
+    function displayChart(date_arr, price_arr) {
+      var options = {
+          chart: {
+            type: 'area',
+            toolbar: {
+              show: false
+            }
+          },
+          grid: {
+            show: false
+          },
+          series: [{
+            name: 'anji/bnb',
+            data: price_arr
+          }],
+          stroke: {
+            curve: 'smooth'
+          },
+          fill: {
+            colors: ['#a098e9'],
+            type: 'gradient',
+            gradient: {
+                shade: 'dark',
+                type: "vertical",
+                opacityFrom: 0.8,
+                opacityTo: 0.3,
+            },
+          },
+          colors: ['#a098e9'],
+          dataLabels: {
+            enabled: false
+          },
+          tooltip: {
+            x: {
+              format: 'dd/MM/yy HH:mm'
+            },
+          },
+          xaxis: {
+            categories: date_arr,
+            labels: {
+              show: false
+            }
+          },
+          yaxis: {
+            labels: {
+              show: false
+            }
+          }
+        }
+
+        var chart = new ApexCharts(document.querySelector("#chart"), options);
+        $("#chart").empty();
+        chart.render();
+        stopLoading();
+    }
+
+    
+  });
+
+</script>

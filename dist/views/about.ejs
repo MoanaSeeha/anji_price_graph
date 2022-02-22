@@ -1,0 +1,28 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>ExpressJS TypeScript starter template</title>
+</head>
+
+<body class=" bg-neutral-300">
+    <div class="flex justify-around mt-36">
+        <!-- left part -->
+        <div class="bg-white rounded-lg w-3/12 h-72">
+            <%- include('partials/left') %>
+        </div>
+        <!-- center part -->
+        <div class="bg-white rounded-lg w-5/12">
+            <%- include('partials/chart') %>
+        </div>
+        <!-- right part -->
+        <div class="bg-white rounded-lg w-3/12 h-72">
+            <%- include('partials/right') %>
+        </div>
+    </div>
+</body>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+</html>
